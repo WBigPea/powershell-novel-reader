@@ -7,8 +7,8 @@
 
     <description>
         <![CDATA[
-        伪装成 PowerShell 小说阅读器
         A novel reader disguised as a Windows PowerShell terminal inside your JetBrains IDE.
+        伪装成 PowerShell 小说阅读器
         It looks exactly like a real terminal with dark theme, blue title bar, PS prompt and Consolas font, so nobody can tell you are reading novels.
 
         Features:

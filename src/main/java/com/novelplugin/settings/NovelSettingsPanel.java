@@ -6,11 +6,12 @@ import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
+import com.novelplugin.NovelBundle;
 
 import javax.swing.*;
 
 /**
- * 设置面板 UI。
+ * 设置面板 UI（国际化）。
  */
 public class NovelSettingsPanel {
 
@@ -31,54 +32,71 @@ public class NovelSettingsPanel {
             "Tail -f 伪装（不清屏 + 命令上下文）"
     };
 
+    private static final String[] DISGUISE_OPTIONS_EN = {
+            "No disguise (plain text)",
+            "Log disguise (timestamps + log levels)",
+            "System output interleave (build/CI info)",
+            "Git Diff disguise (code review style)",
+            "Progress bar disguise (processing progress)",
+            "Tail -f disguise (no clear + command context)"
+    };
+
     public NovelSettingsPanel() {
         novelFileField = new TextFieldWithBrowseButton();
         FileChooserDescriptor descriptor = new FileChooserDescriptor(true, false, false, false, false, false);
         descriptor.withFileFilter(file -> file.getName().endsWith(".txt"));
-        descriptor.setTitle("选择小说文件");
-        descriptor.setDescription("选择一个 .txt 格式的小说文件");
-        novelFileField.addBrowseFolderListener("选择小说文件", "选择一个 .txt 格式的小说文件", null, descriptor);
+        descriptor.setTitle(NovelBundle.msg("settings.file.chooser.title"));
+        descriptor.setDescription(NovelBundle.msg("settings.file.chooser.desc"));
+        novelFileField.addBrowseFolderListener(
+                NovelBundle.msg("settings.file.chooser.title"),
+                NovelBundle.msg("settings.file.chooser.desc"), null, descriptor);
 
         aliasField = new JBTextField(20);
         nextPageKeyField = new JBTextField(10);
         prevPageKeyField = new JBTextField(10);
         linesPerPageField = new JBTextField(10);
-        disguiseModeCombo = new ComboBox<>(DISGUISE_OPTIONS);
+        disguiseModeCombo = new ComboBox<>(isZh() ? DISGUISE_OPTIONS : DISGUISE_OPTIONS_EN);
+
+        String[] options = isZh() ? DISGUISE_OPTIONS : DISGUISE_OPTIONS_EN;
 
         mainPanel = FormBuilder.createFormBuilder()
-                .addLabeledComponent("小说文件:", novelFileField)
-                .addComponentToRightColumn(new JBLabel("选择 .txt 小说文件，在终端中用 cat <别名> 打开"))
+                .addLabeledComponent(NovelBundle.msg("settings.label.file"), novelFileField)
+                .addComponentToRightColumn(new JBLabel(NovelBundle.msg("settings.hint.file")))
                 .addVerticalGap(8)
-                .addLabeledComponent("终端别名:", aliasField)
-                .addComponentToRightColumn(new JBLabel("在终端中输入 cat <别名> 即可打开此小说（默认: book）"))
+                .addLabeledComponent(NovelBundle.msg("settings.label.alias"), aliasField)
+                .addComponentToRightColumn(new JBLabel(NovelBundle.msg("settings.hint.alias")))
                 .addVerticalGap(12)
                 .addSeparator()
                 .addVerticalGap(8)
-                .addLabeledComponent("伪装模式:", disguiseModeCombo)
-                .addComponentToRightColumn(new JBLabel("选择小说显示时的伪装方式，下方有各模式说明"))
+                .addLabeledComponent(NovelBundle.msg("settings.label.disguise"), disguiseModeCombo)
+                .addComponentToRightColumn(new JBLabel(NovelBundle.msg("settings.hint.disguise")))
                 .addVerticalGap(4)
-                .addComponent(new JBLabel("  ┌ 无伪装：直接显示纯文本小说内容"))
-                .addComponent(new JBLabel("  ├ 日志伪装：每行加 [时间戳] [INFO/WARN/ERROR] 前缀，像应用日志"))
-                .addComponent(new JBLabel("  ├ 系统输出穿插：每 5-8 行穿插假编译/CI/部署输出"))
-                .addComponent(new JBLabel("  ├ Git Diff：显示 diff 文件头，每行标 +/- 号，像 code review"))
-                .addComponent(new JBLabel("  ├ 进度条伪装：底部显示进度条，像在处理日志流"))
-                .addComponent(new JBLabel("  └ Tail -f：不清屏，内容上滚，底部保留命令上下文"))
+                .addComponent(new JBLabel(NovelBundle.msg("settings.disguise.desc.0")))
+                .addComponent(new JBLabel(NovelBundle.msg("settings.disguise.desc.1")))
+                .addComponent(new JBLabel(NovelBundle.msg("settings.disguise.desc.2")))
+                .addComponent(new JBLabel(NovelBundle.msg("settings.disguise.desc.3")))
+                .addComponent(new JBLabel(NovelBundle.msg("settings.disguise.desc.4")))
+                .addComponent(new JBLabel(NovelBundle.msg("settings.disguise.desc.5")))
                 .addVerticalGap(12)
                 .addSeparator()
                 .addVerticalGap(8)
-                .addLabeledComponent("下一页快捷键:", nextPageKeyField)
-                .addComponentToRightColumn(new JBLabel("默认: n"))
+                .addLabeledComponent(NovelBundle.msg("settings.label.next_key"), nextPageKeyField)
+                .addComponentToRightColumn(new JBLabel(NovelBundle.msg("settings.hint.next_key")))
                 .addVerticalGap(8)
-                .addLabeledComponent("上一页快捷键:", prevPageKeyField)
-                .addComponentToRightColumn(new JBLabel("默认: p"))
+                .addLabeledComponent(NovelBundle.msg("settings.label.prev_key"), prevPageKeyField)
+                .addComponentToRightColumn(new JBLabel(NovelBundle.msg("settings.hint.prev_key")))
                 .addVerticalGap(8)
-                .addLabeledComponent("每页行数:", linesPerPageField)
-                .addComponentToRightColumn(new JBLabel("每页显示行数，范围 5-100（默认: 28）"))
+                .addLabeledComponent(NovelBundle.msg("settings.label.lines"), linesPerPageField)
+                .addComponentToRightColumn(new JBLabel(NovelBundle.msg("settings.hint.lines")))
                 .addVerticalGap(16)
-                .addComponent(new JBLabel("阅读进度会自动保存，下次打开同一本书时从上次的位置继续。"))
-                .addComponent(new JBLabel("修改每页行数后重新打开小说，阅读位置不会丢失（按精确行号保存）。"))
+                .addComponent(new JBLabel(NovelBundle.msg("settings.hint.progress")))
+                .addComponent(new JBLabel(NovelBundle.msg("settings.hint.progress2")))
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
+    }
+
+    private boolean isZh() {
+        return "zh".equals(java.util.Locale.getDefault().getLanguage());
     }
 
     public JPanel getPanel() { return mainPanel; }
@@ -101,33 +119,21 @@ public class NovelSettingsPanel {
     }
     public void setLinesPerPage(int lines) { linesPerPageField.setText(String.valueOf(lines)); }
 
-    /** 返回伪装模式的内部 key */
-    public String getDisguiseMode() {
-        return modeToKey(disguiseModeCombo.getSelectedIndex());
-    }
-    public void setDisguiseMode(String modeKey) {
-        int idx = keyToModeIndex(modeKey);
-        disguiseModeCombo.setSelectedIndex(idx);
-    }
+    public String getDisguiseMode() { return modeToKey(disguiseModeCombo.getSelectedIndex()); }
+    public void setDisguiseMode(String modeKey) { disguiseModeCombo.setSelectedIndex(keyToModeIndex(modeKey)); }
 
     private static final String[] MODE_KEYS = {
-            NovelPluginSettings.DISGUISE_NONE,
-            NovelPluginSettings.DISGUISE_LOG,
-            NovelPluginSettings.DISGUISE_SYSTEM_OUTPUT,
-            NovelPluginSettings.DISGUISE_DIFF,
-            NovelPluginSettings.DISGUISE_PROGRESS_BAR,
-            NovelPluginSettings.DISGUISE_TAIL
+            NovelPluginSettings.DISGUISE_NONE, NovelPluginSettings.DISGUISE_LOG,
+            NovelPluginSettings.DISGUISE_SYSTEM_OUTPUT, NovelPluginSettings.DISGUISE_DIFF,
+            NovelPluginSettings.DISGUISE_PROGRESS_BAR, NovelPluginSettings.DISGUISE_TAIL
     };
 
     private String modeToKey(int index) {
-        if (index >= 0 && index < MODE_KEYS.length) return MODE_KEYS[index];
-        return NovelPluginSettings.DISGUISE_NONE;
+        return (index >= 0 && index < MODE_KEYS.length) ? MODE_KEYS[index] : NovelPluginSettings.DISGUISE_NONE;
     }
 
     private int keyToModeIndex(String key) {
-        for (int i = 0; i < MODE_KEYS.length; i++) {
-            if (MODE_KEYS[i].equals(key)) return i;
-        }
+        for (int i = 0; i < MODE_KEYS.length; i++) { if (MODE_KEYS[i].equals(key)) return i; }
         return 0;
     }
 }

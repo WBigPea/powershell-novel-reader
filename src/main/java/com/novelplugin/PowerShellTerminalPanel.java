@@ -124,7 +124,7 @@ public class PowerShellTerminalPanel extends JPanel {
         inputPanel.setBackground(BG_COLOR);
         inputPanel.setBorder(BorderFactory.createEmptyBorder(2, 8, 4, 8));
 
-        promptLabel = new JLabel("PS C:\\Users\\dev\\Documents> ");
+        promptLabel = new JLabel(NovelBundle.msg("prompt"));
         promptLabel.setFont(new Font(FONT_NAME, Font.PLAIN, FONT_SIZE));
         promptLabel.setForeground(PROMPT_COLOR);
         promptLabel.setBackground(BG_COLOR);
@@ -259,12 +259,12 @@ public class PowerShellTerminalPanel extends JPanel {
 
     private void showWelcome() {
         appendLine("", outputStyle);
-        appendLine("Windows PowerShell", successStyle);
-        appendLine("版权所有 (C) Microsoft Corporation。保留所有权利。", outputStyle);
+        appendLine(NovelBundle.msg("welcome.title"), successStyle);
+        appendLine(NovelBundle.msg("welcome.copyright"), outputStyle);
         appendLine("", outputStyle);
-        appendLine("PSReadLine 2.2.6", outputStyle);
+        appendLine(NovelBundle.msg("welcome.readline"), outputStyle);
         appendLine("", outputStyle);
-        appendLine("模块 'NovelReader' 已加载。输入 'help' 查看可用命令。", successStyle);
+        appendLine(NovelBundle.msg("welcome.module.loaded"), successStyle);
         appendLine("", outputStyle);
         commandField.requestFocusInWindow();
     }
@@ -302,12 +302,12 @@ public class PowerShellTerminalPanel extends JPanel {
             case "progress": cmdShowProgress(); break;
             case "exit":
                 appendLine("", outputStyle);
-                appendLine("  Windows PowerShell 会话已结束。", outputStyle);
-                appendLine("  （关闭窗口请点击右上角 ✕）", outputStyle);
+                appendLine("  " + NovelBundle.msg("session.ended"), outputStyle);
+                appendLine("  " + NovelBundle.msg("session.close_hint"), outputStyle);
                 break;
             case "whoami":
                 String username = System.getProperty("user.name", "dev");
-                appendLine("  " + username + "\\" + username, outputStyle);
+                appendLine("  " + NovelBundle.msg("system.username_format", username), outputStyle);
                 break;
             case "ipconfig": cmdIpconfig(); break;
             case "date": case "get-date":
@@ -316,7 +316,7 @@ public class PowerShellTerminalPanel extends JPanel {
                 break;
             case "pwd":
                 appendLine("", outputStyle);
-                appendLine("  C:\\Users\\dev\\Documents", outputStyle);
+                appendLine("  " + NovelBundle.msg("pwd.path"), outputStyle);
                 break;
             case "echo": appendLine("  " + args, outputStyle); break;
             default:
@@ -331,19 +331,20 @@ public class PowerShellTerminalPanel extends JPanel {
     private void cmdHelp() {
         NovelPluginSettings s = NovelPluginSettings.getInstance();
         appendLine("", outputStyle);
-        appendLine("  PowerShell Novel Reader 帮助", PROMPT_COLOR);
-        appendLine("  ===============================", PROMPT_COLOR);
+        appendLine("  " + NovelBundle.msg("cmd.help.title"), promptStyle);
+        appendLine("  " + NovelBundle.msg("cmd.help.divider"), promptStyle);
         appendLine("", outputStyle);
-        appendLine("  小说阅读命令：", successStyle);
-        appendLine("    cat " + s.getNovelFileAlias() + "       - 打开小说并继续阅读", outputStyle);
-        appendLine("    " + s.getNextPageKey() + "                  - 下一页", outputStyle);
-        appendLine("    " + s.getPrevPageKey() + "                  - 上一页", outputStyle);
-        appendLine("    progress           - 查看阅读进度", outputStyle);
+        appendLine("  " + NovelBundle.msg("cmd.help.novel_cmds"), successStyle);
+        appendLine("    " + NovelBundle.msg("cmd.help.cat"), outputStyle);
+        appendLine("    " + NovelBundle.msg("cmd.help.next", s.getNextPageKey()), outputStyle);
+        appendLine("    " + NovelBundle.msg("cmd.help.prev", s.getPrevPageKey()), outputStyle);
+        appendLine("    " + NovelBundle.msg("cmd.help.progress"), outputStyle);
         appendLine("", outputStyle);
-        appendLine("  终端命令：", successStyle);
+        appendLine("  " + NovelBundle.msg("cmd.help.terminal_cmds"), successStyle);
         appendLine("    help / clear / cls / whoami / ipconfig / date / pwd / echo", outputStyle);
         appendLine("", outputStyle);
-        appendLine("  快捷键： ↑/↓ 命令历史 | Tab 补全 | Ctrl+L 清屏", outputStyle);
+        appendLine("  " + NovelBundle.msg("cmd.help.shortcuts"), successStyle);
+        appendLine("    " + NovelBundle.msg("cmd.help.shortcuts.detail"), outputStyle);
         appendLine("", outputStyle);
     }
 
@@ -352,7 +353,7 @@ public class PowerShellTerminalPanel extends JPanel {
         String path = s.getNovelFilePath();
         String alias = s.getNovelFileAlias();
         appendLine("", outputStyle);
-        appendLine("    目录: C:\\Users\\dev\\Documents\\novels", PROMPT_COLOR);
+        appendLine("    " + NovelBundle.msg("list.dir"), promptStyle);
         appendLine("", outputStyle);
         if (path != null && !path.isEmpty()) {
             File f = new File(path);
@@ -361,13 +362,13 @@ public class PowerShellTerminalPanel extends JPanel {
                 int progress = s.getReadingProgress(alias);
                 int totalPages = countTotalPages(path);
                 if (totalPages > 0)
-                    appendLine("    阅读进度: 第 " + (progress / linesPerPage + 1) + " 页 / 共 " + totalPages + " 页", successStyle);
+                    appendLine("    " + NovelBundle.msg("list.progress", progress / linesPerPage + 1, totalPages), successStyle);
             } else {
-                appendLine("    小说文件不存在，请在设置中重新选择。", ERROR_COLOR);
+                appendLine("    " + NovelBundle.msg("list.file_not_found"), errorStyle);
             }
         } else {
-            appendLine("    未配置小说文件。", outputStyle);
-            appendLine("    请到 Settings -> Tools -> PowerShell Novel Reader 选择 txt 文件。", successStyle);
+            appendLine("    " + NovelBundle.msg("list.no_file"), outputStyle);
+            appendLine("    " + NovelBundle.msg("list.goto_settings"), successStyle);
         }
         appendLine("", outputStyle);
     }
@@ -379,27 +380,27 @@ public class PowerShellTerminalPanel extends JPanel {
         if (name == null || name.isEmpty()) name = alias;
         if (!name.equalsIgnoreCase(alias)) {
             appendLine("", outputStyle);
-            appendLine("  Get-Content : 找不到文件 '" + name + "'", ERROR_COLOR);
-            appendLine("  可用文件: " + alias, outputStyle);
+            appendLine("  " + NovelBundle.msg("open.not_available", name), errorStyle);
+            appendLine("  " + NovelBundle.msg("open.available", alias), outputStyle);
             return;
         }
         if (filePath == null || filePath.isEmpty()) {
             appendLine("", outputStyle);
-            appendLine("  Get-Content : 未配置小说文件", ERROR_COLOR);
-            appendLine("  请到 Settings -> Tools -> PowerShell Novel Reader 选择 txt 文件。", successStyle);
+            appendLine("  " + NovelBundle.msg("open.not_configured"), errorStyle);
+            appendLine("  " + NovelBundle.msg("open.not_configured_hint"), outputStyle);
             return;
         }
         File f = new File(filePath);
         if (!f.exists()) {
             appendLine("", outputStyle);
-            appendLine("  Get-Content : 文件不存在 '" + filePath + "'", ERROR_COLOR);
+            appendLine("  " + NovelBundle.msg("open.not_found", filePath), errorStyle);
             return;
         }
         List<String> lines;
         try { lines = Files.readAllLines(Paths.get(filePath), StandardCharsets.UTF_8); }
         catch (IOException e) {
             appendLine("", outputStyle);
-            appendLine("  Get-Content : 读取失败 - " + e.getMessage(), ERROR_COLOR);
+            appendLine("  " + NovelBundle.msg("open.read_failed", e.getMessage()), errorStyle);
             return;
         }
         novelLines.clear();
@@ -416,7 +417,7 @@ public class PowerShellTerminalPanel extends JPanel {
         if (NovelPluginSettings.DISGUISE_TAIL.equals(mode)) {
             // tail 模式不清屏，追加内容
             appendLine("", outputStyle);
-            appendLine("PS C:\\Users\\dev\\Documents> Get-Content .\\app.log -Wait -Tail " + linesPerPage, commandStyle);
+            appendLine(NovelBundle.msg("prompt") + NovelBundle.msg("tail.command", linesPerPage), commandStyle);
         }
 
         showNovelPage();
@@ -469,7 +470,7 @@ public class PowerShellTerminalPanel extends JPanel {
 
         // 页脚
         if (isTail) {
-            appendLineNoScroll("PS C:\\Users\\dev\\Documents> _", commandStyle);
+            appendLineNoScroll(NovelBundle.msg("prompt") + "_", commandStyle);
         } else if (NovelPluginSettings.DISGUISE_PROGRESS_BAR.equals(mode)) {
             int totalPages = (novelLines.size() + pageLines - 1) / pageLines;
             int currentPage = currentLine / pageLines + 1;
@@ -478,12 +479,12 @@ public class PowerShellTerminalPanel extends JPanel {
             String bar = "=".repeat(filled) + " ".repeat(40 - filled);
             appendLineNoScroll("", outputStyle);
             appendLineNoScroll("  [" + bar + "] " + String.format("%.0f%%", percent), promptStyle);
-            appendLineNoScroll("  > Analyzing log stream... " + nextKey + "=next " + prevKey + "=prev", dimStyle);
+            appendLineNoScroll("  " + NovelBundle.msg("page.progress_bar", nextKey, prevKey), dimStyle);
         } else if (!NovelPluginSettings.DISGUISE_DIFF.equals(mode)) {
             int totalPages = (novelLines.size() + pageLines - 1) / pageLines;
             int currentPage = currentLine / pageLines + 1;
             appendLineNoScroll("", outputStyle);
-            appendLineNoScroll("  --- " + currentPage + "/" + totalPages + " --- " + nextKey + ":next " + prevKey + ":prev", dimStyle);
+            appendLineNoScroll("  " + NovelBundle.msg("page.info", currentPage, totalPages) + " " + NovelBundle.msg("page.nav", nextKey, prevKey), dimStyle);
         }
 
         settings.saveReadingProgress(currentNovelName, currentLine);
@@ -578,16 +579,16 @@ public class PowerShellTerminalPanel extends JPanel {
     // ==================== 翻页 ====================
 
     private void cmdNextPage() {
-        if (novelLines.isEmpty()) { appendLine("", outputStyle); appendLine("  当前没有正在阅读的小说。", outputStyle); return; }
+        if (novelLines.isEmpty()) { appendLine("", outputStyle); appendLine("  " + NovelBundle.msg("nav.no_novel"), outputStyle); appendLine("  " + NovelBundle.msg("nav.open_hint"), outputStyle); return; }
         int nextStart = currentLine + linesPerPage;
-        if (nextStart >= novelLines.size()) { appendLine("", outputStyle); appendLine("  已经是最后一页了。", outputStyle); return; }
+        if (nextStart >= novelLines.size()) { appendLine("", outputStyle); appendLine("  " + NovelBundle.msg("nav.last_page"), outputStyle); return; }
         currentLine = nextStart;
         showNovelPage();
     }
 
     private void cmdPrevPage() {
-        if (novelLines.isEmpty()) { appendLine("", outputStyle); appendLine("  当前没有正在阅读的小说。", outputStyle); return; }
-        if (currentLine == 0) { appendLine("", outputStyle); appendLine("  已经是第一页了。", outputStyle); return; }
+        if (novelLines.isEmpty()) { appendLine("", outputStyle); appendLine("  " + NovelBundle.msg("nav.no_novel"), outputStyle); appendLine("  " + NovelBundle.msg("nav.open_hint"), outputStyle); return; }
+        if (currentLine == 0) { appendLine("", outputStyle); appendLine("  " + NovelBundle.msg("nav.first_page"), outputStyle); return; }
         currentLine = Math.max(0, currentLine - linesPerPage);
         showNovelPage();
     }
@@ -597,34 +598,34 @@ public class PowerShellTerminalPanel extends JPanel {
         String alias = s.getNovelFileAlias();
         String path = s.getNovelFilePath();
         appendLine("", outputStyle);
-        if (path == null || path.isEmpty()) { appendLine("  未配置小说文件。", outputStyle); return; }
+        if (path == null || path.isEmpty()) { appendLine("  " + NovelBundle.msg("progress.not_configured"), outputStyle); return; }
         int savedLine = s.getReadingProgress(alias);
         int totalPages = countTotalPages(path);
-        if (totalPages == 0) { appendLine("  无法计算进度。", outputStyle); return; }
+        if (totalPages == 0) { appendLine("  " + NovelBundle.msg("progress.cannot_calc"), outputStyle); return; }
         int currentPage = savedLine / linesPerPage + 1;
         double percent = (double) savedLine / (totalPages * linesPerPage) * 100;
-        appendLine("  小说: " + new File(path).getName(), PROMPT_COLOR);
-        appendLine("  进度: 第 " + currentPage + " 页 / 共 " + totalPages + " 页 (" + String.format("%.1f%%", percent) + ")", successStyle);
+        appendLine("  " + NovelBundle.msg("progress.info", new File(path).getName()), promptStyle);
+        appendLine("  " + NovelBundle.msg("progress.detail", currentPage, totalPages, String.format("%.1f%%", percent)), successStyle);
         appendLine("", outputStyle);
     }
 
     private void cmdIpconfig() {
         appendLine("", outputStyle);
-        appendLine("  Windows IP 配置", outputStyle);
+        appendLine("  " + NovelBundle.msg("ipconfig.title"), outputStyle);
         appendLine("", outputStyle);
-        appendLine("  以太网适配器 以太网:", outputStyle);
-        appendLine("    IPv4 地址 . . . . . . . . . . . . : 192.168.1.100", outputStyle);
-        appendLine("    子网掩码 . . . . . . . . . . . . : 255.255.255.0", outputStyle);
-        appendLine("    默认网关. . . . . . . . . . . . . : 192.168.1.1", outputStyle);
+        appendLine("  " + NovelBundle.msg("ipconfig.adapter"), outputStyle);
+        appendLine("    " + NovelBundle.msg("ipconfig.ipv4"), outputStyle);
+        appendLine("    " + NovelBundle.msg("ipconfig.subnet"), outputStyle);
+        appendLine("    " + NovelBundle.msg("ipconfig.gateway"), outputStyle);
         appendLine("", outputStyle);
     }
 
     private void cmdUnknown(String input) {
         appendLine("", outputStyle);
-        appendLine("  " + input + " : 无法将 \"" + input + "\" 项识别为 cmdlet、函数、脚本文件", ERROR_COLOR);
-        appendLine("  或可运行程序的名称。", ERROR_COLOR);
+        appendLine("  " + NovelBundle.msg("error.unknown.prefix", input), errorStyle);
+        appendLine("  " + NovelBundle.msg("error.unknown.suffix"), errorStyle);
         appendLine("", outputStyle);
-        appendLine("  输入 help 查看可用命令列表。", outputStyle);
+        appendLine("  " + NovelBundle.msg("error.unknown.hint"), outputStyle);
     }
 
     // ==================== 工具方法 ====================
@@ -634,7 +635,7 @@ public class PowerShellTerminalPanel extends JPanel {
     }
 
     private void appendPromptWithCommand(String command) {
-        try { doc.insertString(doc.getLength(), "PS C:\\Users\\dev\\Documents> " + command + "\n", commandStyle); }
+        try { doc.insertString(doc.getLength(), NovelBundle.msg("prompt") + command + "\n", commandStyle); }
         catch (BadLocationException ignored) {}
         scrollToBottom();
     }

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<idea-plugin>
+    <id>com.novelplugin.powershell-novel-reader</id>
+    <name>PowerShell Novel Reader</name>
+    <version>1.0.0</version>
+<!--    <vendor email="support@novelplugin.com" url="https://github.com/novelplugin">NovelPlugin</vendor>-->
+
+    <description>
+        <![CDATA[
+        <h2>PowerShell Novel Reader / PowerShell 小说阅读器</h2>
+
+        <h3>English</h3>
+        <p>A novel reader disguised as a Windows PowerShell terminal</p>
+        <p><b>Key Features:</b></p>
+        <ul>
+            <li><b>Six Disguise Modes</b> — Plain text, fake application logs with timestamps, interleaved build/system output, git diff style, progress bar footer, and tail -f mode with command context.</li>
+            <li><b>Novel File Selection</b> — Pick any .txt file from Settings → Tools → PowerShell Novel Reader. Assign a custom alias like <code>book</code>.</li>
+            <li><b>Reading Progress Saved</b> — Your position is automatically persisted per book. Reopen and continue exactly where you left off.</li>
+            <li><b>Configurable Paging</b> — Customize next/prev page keys and lines per page (5–100).</li>
+            <li><b>Full Terminal Commands</b> — <code>help</code>, <code>ls</code>, <code>cat</code>, <code>clear</code>, <code>whoami</code>, <code>ipconfig</code>, <code>date</code>, <code>pwd</code>, <code>echo</code>, <code>progress</code>, command history (↑/↓), Tab completion.</li>
+            <li><b>Quick Toggle</b> — Press <code>Ctrl+Alt+N</code> to show/hide the terminal window instantly.</li>
+        </ul>
+        <p><b>Usage:</b> Open the PowerShell tool window at the bottom → type <code>cat book</code> → read with <code>n</code> (next) / <code>p</code> (prev).</p>
+
+        <hr/>
+
+        <h3>中文说明</h3>
+        <p>一款伪装成 Windows PowerShell 终端的小说阅读器</p>
+        <p><b>核心功能：</b></p>
+        <ul>
+            <li><b>六种伪装模式</b> —— 纯文本、日志伪装（带时间戳和日志级别）、系统输出穿插（混合编译/部署信息）、Git Diff 伪装（代码审查风格）、进度条伪装（底部显示处理进度）、Tail -f 伪装（不清屏 + 命令上下文）。</li>
+            <li><b>自定义小说文件</b> —— 在 Settings → Tools → PowerShell Novel Reader 中选择任意 .txt 文件，设置别名（如 <code>book</code>）。</li>
+            <li><b>阅读进度自动保存</b> —— 每本书的阅读位置自动持久化保存，重新打开从上次位置继续，修改每页行数也不丢失进度。</li>
+            <li><b>可配置翻页</b> —— 自定义下一页/上一页快捷键，每页行数范围 5-100。</li>
+            <li><b>完整终端命令</b> —— <code>help</code>、<code>ls</code>、<code>cat</code>、<code>clear</code>、<code>whoami</code>、<code>ipconfig</code>、<code>date</code>、<code>pwd</code>、<code>echo</code>、<code>progress</code>，支持命令历史（↑/↓）和 Tab 补全。</li>
+            <li><b>一键切换</b> —— 按 <code>Ctrl+Alt+N</code> 快速显示/隐藏终端窗口。</li>
+        </ul>
+        <p><b>使用方法：</b> 打开底部的 PowerShell 工具窗口 → 输入 <code>cat book</code> → 用 <code>n</code> 下一页 / <code>p</code> 上一页。</p>
+        <p><b>各伪装模式说明：</b></p>
+        <ul>
+            <li><b>日志伪装</b>：每行文字前添加 <code>[时间戳] [INFO/WARN/ERROR]</code> 前缀，看起来像在排查应用日志。</li>
+            <li><b>系统输出穿插</b>：每 5-8 行小说穿插一条假的编译/CI/部署输出，如 <code>[OK] Build completed in 3.2s</code>。</li>
+            <li><b>Git Diff 伪装</b>：顶部显示 <code>diff --git</code> 文件头，每行随机标 <code>+</code>（绿）或 <code>-</code>（红），像在 code review。</li>
+            <li><b>进度条伪装</b>：底部显示 <code>[========          ] 45%</code> 进度条和 <code>> Analyzing log stream...</code> 提示。</li>
+            <li><b>Tail -f 伪装</b>：不清屏，内容向上滚动，底部始终保留 <code>Get-Content .\app.log -Wait -Tail 28</code> 命令上下文。</li>
+        </ul>
+        ]]>
+    </description>
+
+    <change-notes>
+        <![CDATA[
+        <h3>v1.0.0</h3>
+        <ul>
+            <li>Initial release / 初始版本</li>
+            <li>PowerShell terminal simulation / PowerShell 终端模拟</li>
+            <li>Novel reader with page navigation / 小说阅读器，支持翻页</li>
+            <li>Six disguise modes / 六种伪装模式</li>
+            <li>Reading progress persistence / 阅读进度持久化保存</li>
+            <li>Configurable settings (file, alias, keys, lines per page, disguise mode) / 可配置设置（文件、别名、快捷键、每页行数、伪装模式）</li>
+        </ul>
+        ]]>
+    </change-notes>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService
+                serviceImplementation="com.novelplugin.settings.NovelPluginSettings"/>
+
+        <toolWindow
+                id="PowerShell"
+                anchor="bottom"
+                icon="AllIcons.Actions.Execute"
+                factoryClass="com.novelplugin.PowerShellNovelWindowFactory"
+                canClose="true">
+        </toolWindow>
+
+        <applicationConfigurable
+                parentId="tools"
+                instance="com.novelplugin.settings.NovelSettingsConfigurable"
+                id="com.novelplugin.NovelSettingsConfigurable"
+                displayName="PowerShell Novel Reader"/>
+    </extensions>
+
+    <actions>
+        <action
+                id="com.novelplugin.ToggleNovelAction"
+                class="com.novelplugin.actions.ToggleNovelAction"
+                text="Toggle PowerShell Novel"
+                description="Toggle PowerShell Novel Reader window">
+            <keyboard-shortcut
+                    first-keystroke="control alt N"
+                    keymap="$default"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

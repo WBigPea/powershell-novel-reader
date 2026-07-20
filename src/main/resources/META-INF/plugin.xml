@@ -2,7 +2,7 @@
 <idea-plugin>
     <id>com.novelplugin.powershell-novel-reader</id>
     <name>PowerShell Novel Reader</name>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <vendor email="1285758660@qq.com" url="https://github.com/WBigPea/powershell-novel-reader">WBigPea</vendor>
 
     <description>
@@ -10,29 +10,16 @@
         A novel reader disguised as a Windows PowerShell terminal inside your JetBrains IDE.
         伪装成 PowerShell 小说阅读器
         It looks exactly like a real terminal with dark theme, blue title bar, PS prompt and Consolas font, so nobody can tell you are reading novels.
-
-        Features:
-        - Six disguise modes: plain text, fake logs with timestamps, interleaved build output, git diff, progress bar, and tail -f
-        - Reading progress auto-saved per book, survives IDE restart and page size changes
-        - Configurable novel file, alias, page keys, and lines per page (5-100)
-        - Built-in terminal commands (help, ls, cat, clear, whoami, ipconfig, etc.)
-        - Quick toggle with Ctrl+Alt+N
-
-        中文说明：一款伪装成 PowerShell 终端的小说阅读器，支持六种伪装模式（日志/Diff/进度条/tail -f 等），阅读进度自动保存，可自定义翻页快捷键和每页行数。打开 Settings - Tools - PowerShell Novel Reader 选择 txt 文件后，在底部 PowerShell 窗口输入 cat book 即可阅读。
+        一款伪装成 PowerShell 终端的小说阅读器，支持六种伪装模式（日志/Diff/进度条/tail -f 等），阅读进度自动保存，可自定义翻页快捷键和每页行数。打开 Settings - Tools - PowerShell Novel Reader 选择 txt 文件后，在底部 PowerShell 窗口输入 cat book 即可阅读。
         ]]>
     </description>
 
     <change-notes>
         <![CDATA[
-        <h3>v1.0.0</h3>
+        <h3>v1.1.0</h3>
         <ul>
-            <li>Initial release / 初始版本</li>
-            <li>PowerShell terminal simulation / PowerShell 终端模拟</li>
-            <li>Novel reader with page navigation / 小说阅读器，支持翻页</li>
-            <li>Six disguise modes / 六种伪装模式</li>
-            <li>Reading progress persistence / 阅读进度持久化保存</li>
-            <li>Configurable settings (file, alias, keys, lines per page, disguise mode) / 可配置设置（文件、别名、快捷键、每页行数、伪装模式）</li>
-        </ul>
+            <li>Add English / 增加英文支持</li>
+       </ul>
         ]]>
     </change-notes>
 

@@ -37,6 +37,7 @@ public final class NovelPluginSettings implements PersistentStateComponent<Novel
         public boolean cursorBlinkEnabled = true;
         public boolean autoDisguiseEnabled = false;
         public String autoDisguiseMode = DISGUISE_LOG;
+        public String bossKey = "F12";
         public Map<String, Integer> readingProgress = new HashMap<>();
     }
 
@@ -82,6 +83,9 @@ public final class NovelPluginSettings implements PersistentStateComponent<Novel
 
     public String getAutoDisguiseMode() { return state.autoDisguiseMode; }
     public void setAutoDisguiseMode(String mode) { state.autoDisguiseMode = mode; }
+
+    public String getBossKey() { return state.bossKey; }
+    public void setBossKey(String key) { state.bossKey = key; }
 
     public int getReadingProgress(String novelName) {
         return state.readingProgress.getOrDefault(novelName, 0);

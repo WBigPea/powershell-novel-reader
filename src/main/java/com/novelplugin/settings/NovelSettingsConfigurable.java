@@ -33,7 +33,8 @@ public class NovelSettingsConfigurable implements Configurable {
                 || !panel.getDisguiseMode().equals(s.getDisguiseMode())
                 || panel.isCursorBlinkEnabled() != s.isCursorBlinkEnabled()
                 || panel.isAutoDisguiseEnabled() != s.isAutoDisguiseEnabled()
-                || !panel.getAutoDisguiseMode().equals(s.getAutoDisguiseMode());
+                || !panel.getAutoDisguiseMode().equals(s.getAutoDisguiseMode())
+                || !panel.getBossKey().equals(s.getBossKey());
     }
 
     @Override
@@ -48,6 +49,7 @@ public class NovelSettingsConfigurable implements Configurable {
         s.setCursorBlinkEnabled(panel.isCursorBlinkEnabled());
         s.setAutoDisguiseEnabled(panel.isAutoDisguiseEnabled());
         s.setAutoDisguiseMode(panel.getAutoDisguiseMode());
+        s.setBossKey(panel.getBossKey());
     }
 
     @Override
@@ -62,6 +64,7 @@ public class NovelSettingsConfigurable implements Configurable {
         panel.setCursorBlinkEnabled(s.isCursorBlinkEnabled());
         panel.setAutoDisguiseEnabled(s.isAutoDisguiseEnabled());
         panel.setAutoDisguiseMode(s.getAutoDisguiseMode());
+        panel.setBossKey(s.getBossKey());
     }
 
     @Override

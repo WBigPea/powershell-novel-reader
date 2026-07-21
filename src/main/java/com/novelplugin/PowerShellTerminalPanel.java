@@ -80,6 +80,7 @@ public class PowerShellTerminalPanel extends JPanel {
     private final JLabel promptLabel;
     private final JLabel cursorLabel;
     private javax.swing.Timer cursorBlinkTimer;
+    private javax.swing.Timer autoDisguiseTimer;
 
     private final List<String> commandHistory = new ArrayList<>();
     private int historyIndex = -1;
@@ -97,6 +98,9 @@ public class PowerShellTerminalPanel extends JPanel {
     private boolean isAutoDisguised = false;
     private int savedCurrentLine = 0;
     private String savedNovelName = "";
+
+    // 老板键状态
+    private boolean bossKeyActive = false;
 
     public PowerShellTerminalPanel(Project project) {
         this.project = project;
@@ -159,6 +163,7 @@ public class PowerShellTerminalPanel extends JPanel {
 
         setupCursorBlink();
         setupEventHandlers();
+        setupAutoDisguise();
         SwingUtilities.invokeLater(this::showWelcome);
     }
 
@@ -285,16 +290,88 @@ public class PowerShellTerminalPanel extends JPanel {
         });
         addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) { commandField.requestFocusInWindow(); }
-            @Override public void mouseEntered(MouseEvent e) { restoreDisguiseMode(); }
-            @Override public void mouseExited(MouseEvent e) { triggerAutoDisguise(); }
         });
         commandField.registerKeyboardAction(e -> clearScreen(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
+
+        // 老板键快捷键（注册在面板上，全局生效）
+        String bossKey = NovelPluginSettings.getInstance().getBossKey();
+        int bossKeyCode = parseBossKey(bossKey);
+        registerKeyboardAction(e -> toggleBossKey(),
+                KeyStroke.getKeyStroke(bossKeyCode, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+    }
+
+    private int parseBossKey(String key) {
+        if (key == null || key.isEmpty()) return KeyEvent.VK_F12;
+        switch (key.toUpperCase()) {
+            case "F1": return KeyEvent.VK_F1;
+            case "F2": return KeyEvent.VK_F2;
+            case "F3": return KeyEvent.VK_F3;
+            case "F4": return KeyEvent.VK_F4;
+            case "F5": return KeyEvent.VK_F5;
+            case "F6": return KeyEvent.VK_F6;
+            case "F7": return KeyEvent.VK_F7;
+            case "F8": return KeyEvent.VK_F8;
+            case "F9": return KeyEvent.VK_F9;
+            case "F10": return KeyEvent.VK_F10;
+            case "F11": return KeyEvent.VK_F11;
+            case "F12": return KeyEvent.VK_F12;
+            case "ESC": case "ESCAPE": return KeyEvent.VK_ESCAPE;
+            case "PAUSE": case "BREAK": return KeyEvent.VK_PAUSE;
+            case "SCROLL": return KeyEvent.VK_SCROLL_LOCK;
+            case "INSERT": return KeyEvent.VK_INSERT;
+            default: return KeyEvent.VK_F12;
+        }
+    }
+
+    // ==================== 自动伪装（定时器轮询 + 焦点兜底） ====================
+
+    private void setupAutoDisguise() {
+        autoDisguiseTimer = new javax.swing.Timer(500, e -> {
+            NovelPluginSettings settings = NovelPluginSettings.getInstance();
+            if (!settings.isAutoDisguiseEnabled()) {
+                if (isAutoDisguised && !bossKeyActive) {
+                    SwingUtilities.invokeLater(this::restoreDisguiseMode);
+                }
+                return;
+            }
+            // 老板键激活时，自动伪装不干涉
+            if (bossKeyActive) return;
+            PointerInfo pi = MouseInfo.getPointerInfo();
+            if (pi == null) return;
+            Point mouseScreen = pi.getLocation();
+            try {
+                if (!isShowing()) return;
+                Point panelScreen = getLocationOnScreen();
+                Rectangle bounds = new Rectangle(panelScreen.x, panelScreen.y, getWidth(), getHeight());
+                boolean inside = bounds.contains(mouseScreen);
+
+                if (!inside && !isAutoDisguised && !novelLines.isEmpty()) {
+                    SwingUtilities.invokeLater(this::triggerAutoDisguise);
+                } else if (inside && isAutoDisguised) {
+                    SwingUtilities.invokeLater(this::restoreDisguiseMode);
+                }
+            } catch (IllegalComponentStateException ignored) {
+                // 面板尚未显示在屏幕上，跳过本次检查
+            }
+        });
+        autoDisguiseTimer.start();
+
+        // 焦点兜底：用户点击输入框时强制恢复（老板键状态不干涉）
+        commandField.addFocusListener(new FocusAdapter() {
+            @Override public void focusGained(FocusEvent e) {
+                if (isAutoDisguised && !bossKeyActive) {
+                    restoreDisguiseMode();
+                }
+            }
+        });
     }
 
     private void triggerAutoDisguise() {
         NovelPluginSettings settings = NovelPluginSettings.getInstance();
         if (!settings.isAutoDisguiseEnabled() || novelLines.isEmpty() || isAutoDisguised) return;
+        // 立即保存当前阅读进度
+        settings.saveReadingProgress(currentNovelName, currentLine);
         savedCurrentLine = currentLine;
         savedNovelName = currentNovelName;
         isAutoDisguised = true;
@@ -307,6 +384,33 @@ public class PowerShellTerminalPanel extends JPanel {
         currentLine = savedCurrentLine;
         currentNovelName = savedNovelName;
         SwingUtilities.invokeLater(this::showNovelPage);
+    }
+
+    // ==================== 老板键（一键伪装） ====================
+
+    private void toggleBossKey() {
+        if (bossKeyActive) {
+            // 关闭老板键，恢复小说
+            bossKeyActive = false;
+            if (isAutoDisguised) {
+                isAutoDisguised = false;
+            }
+            if (currentNovelName != null && !currentNovelName.isEmpty() || !novelLines.isEmpty()) {
+                currentLine = savedCurrentLine;
+                SwingUtilities.invokeLater(this::showNovelPage);
+            } else {
+                SwingUtilities.invokeLater(this::showWelcome);
+            }
+        } else {
+            // 激活老板键，保存当前状态并显示假日志
+            bossKeyActive = true;
+            savedCurrentLine = currentLine;
+            savedNovelName = currentNovelName;
+            if (!novelLines.isEmpty()) {
+                NovelPluginSettings.getInstance().saveReadingProgress(currentNovelName, currentLine);
+            }
+            SwingUtilities.invokeLater(this::renderFakeLogs);
+        }
     }
 
     private String getEffectiveDisguiseMode() {
@@ -426,6 +530,7 @@ public class PowerShellTerminalPanel extends JPanel {
             case "n": case "next": cmdNextPage(); break;
             case "p": case "prev": case "previous": cmdPrevPage(); break;
             case "progress": cmdShowProgress(); break;
+            case "boss": toggleBossKey(); break;
             case "exit":
                 appendLine("", outputStyle);
                 appendLine("  " + NovelBundle.msg("session.ended"), outputStyle);
@@ -465,6 +570,7 @@ public class PowerShellTerminalPanel extends JPanel {
         appendLine("    " + NovelBundle.msg("cmd.help.next", s.getNextPageKey()), outputStyle);
         appendLine("    " + NovelBundle.msg("cmd.help.prev", s.getPrevPageKey()), outputStyle);
         appendLine("    " + NovelBundle.msg("cmd.help.progress"), outputStyle);
+        appendLine("    " + NovelBundle.msg("cmd.help.boss", s.getBossKey()), outputStyle);
         appendLine("", outputStyle);
         appendLine("  " + NovelBundle.msg("cmd.help.terminal_cmds"), successStyle);
         appendLine("    help / clear / cls / whoami / ipconfig / date / pwd / echo", outputStyle);

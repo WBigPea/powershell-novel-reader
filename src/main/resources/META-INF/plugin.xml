@@ -2,7 +2,7 @@
 <idea-plugin>
     <id>com.novelplugin.powershell-novel-reader</id>
     <name>PowerShell Novel Reader</name>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <vendor email="1285758660@qq.com" url="https://github.com/WBigPea/powershell-novel-reader">WBigPea</vendor>
 
     <description>
@@ -16,6 +16,13 @@
 
     <change-notes>
         <![CDATA[
+        <h3>v1.2.0</h3>
+        <ul>
+            <li>一键老板键（F12）：瞬间切换纯假日志，再按恢复小说</li>
+            <li>编码自动检测：自动识别 GBK/UTF-8/UTF-16</li>
+            <li>光标闪烁：终端风格闪烁光标</li>
+            <li>自动伪装：鼠标离开面板自动显示假日志</li>
+        </ul>
         <h3>v1.1.0</h3>
         <ul>
             <li>Add English / 增加英文支持</li>

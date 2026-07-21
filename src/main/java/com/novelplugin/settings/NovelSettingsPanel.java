@@ -25,6 +25,7 @@ public class NovelSettingsPanel {
     private final JCheckBox cursorBlinkCheck;
     private final JCheckBox autoDisguiseCheck;
     private final JComboBox<String> autoDisguiseModeCombo;
+    private final JBTextField bossKeyField;
 
     private static final String[] DISGUISE_OPTIONS = {
             "无伪装（纯文本）",
@@ -87,6 +88,9 @@ public class NovelSettingsPanel {
         autoDisguiseModeCombo.setEnabled(false);
         autoDisguiseCheck.addActionListener(e -> autoDisguiseModeCombo.setEnabled(autoDisguiseCheck.isSelected()));
 
+        bossKeyField = new JBTextField(10);
+        bossKeyField.setText("F12");
+
         mainPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(NovelBundle.msg("settings.label.file"), novelFileField)
                 .addComponentToRightColumn(new JBLabel(NovelBundle.msg("settings.hint.file")))
@@ -116,6 +120,9 @@ public class NovelSettingsPanel {
                 .addVerticalGap(4)
                 .addLabeledComponent(NovelBundle.msg("settings.label.auto_disguise_mode"), autoDisguiseModeCombo)
                 .addComponentToRightColumn(new JBLabel(NovelBundle.msg("settings.hint.auto_disguise_mode")))
+                .addVerticalGap(8)
+                .addLabeledComponent(NovelBundle.msg("settings.label.boss_key"), bossKeyField)
+                .addComponentToRightColumn(new JBLabel(NovelBundle.msg("settings.hint.boss_key")))
                 .addVerticalGap(12)
                 .addSeparator()
                 .addVerticalGap(8)
@@ -180,6 +187,9 @@ public class NovelSettingsPanel {
         }
         autoDisguiseModeCombo.setSelectedIndex(0);
     }
+
+    public String getBossKey() { return bossKeyField.getText().trim(); }
+    public void setBossKey(String key) { bossKeyField.setText(key); }
 
     private static final String[] MODE_KEYS = {
             NovelPluginSettings.DISGUISE_NONE, NovelPluginSettings.DISGUISE_LOG,

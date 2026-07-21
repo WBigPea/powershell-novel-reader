@@ -34,6 +34,9 @@ public final class NovelPluginSettings implements PersistentStateComponent<Novel
         public String prevPageKey = "p";
         public int linesPerPage = 28;
         public String disguiseMode = DISGUISE_NONE;
+        public boolean cursorBlinkEnabled = true;
+        public boolean autoDisguiseEnabled = false;
+        public String autoDisguiseMode = DISGUISE_LOG;
         public Map<String, Integer> readingProgress = new HashMap<>();
     }
 
@@ -70,6 +73,15 @@ public final class NovelPluginSettings implements PersistentStateComponent<Novel
 
     public String getDisguiseMode() { return state.disguiseMode; }
     public void setDisguiseMode(String mode) { state.disguiseMode = mode; }
+
+    public boolean isCursorBlinkEnabled() { return state.cursorBlinkEnabled; }
+    public void setCursorBlinkEnabled(boolean enabled) { state.cursorBlinkEnabled = enabled; }
+
+    public boolean isAutoDisguiseEnabled() { return state.autoDisguiseEnabled; }
+    public void setAutoDisguiseEnabled(boolean enabled) { state.autoDisguiseEnabled = enabled; }
+
+    public String getAutoDisguiseMode() { return state.autoDisguiseMode; }
+    public void setAutoDisguiseMode(String mode) { state.autoDisguiseMode = mode; }
 
     public int getReadingProgress(String novelName) {
         return state.readingProgress.getOrDefault(novelName, 0);

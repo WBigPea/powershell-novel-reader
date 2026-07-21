@@ -9,6 +9,7 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
@@ -77,6 +78,8 @@ public class PowerShellTerminalPanel extends JPanel {
     private final StyledDocument doc;
     private final JTextField commandField;
     private final JLabel promptLabel;
+    private final JLabel cursorLabel;
+    private javax.swing.Timer cursorBlinkTimer;
 
     private final List<String> commandHistory = new ArrayList<>();
     private int historyIndex = -1;
@@ -89,6 +92,11 @@ public class PowerShellTerminalPanel extends JPanel {
 
     private Style promptStyle, commandStyle, outputStyle, errorStyle, successStyle;
     private Style warnStyle, dimStyle, diffAddStyle, diffDelStyle, diffHunkStyle;
+
+    // 自动伪装状态
+    private boolean isAutoDisguised = false;
+    private int savedCurrentLine = 0;
+    private String savedNovelName = "";
 
     public PowerShellTerminalPanel(Project project) {
         this.project = project;
@@ -137,10 +145,19 @@ public class PowerShellTerminalPanel extends JPanel {
         commandField.setBorder(null);
         commandField.setFocusTraversalKeysEnabled(false);
 
+        cursorLabel = new JLabel("_");
+        cursorLabel.setFont(new Font(FONT_NAME, Font.PLAIN, FONT_SIZE));
+        cursorLabel.setForeground(COMMAND_COLOR);
+        cursorLabel.setBackground(BG_COLOR);
+        cursorLabel.setOpaque(true);
+        cursorLabel.setVisible(false);
+
         inputPanel.add(promptLabel, BorderLayout.WEST);
         inputPanel.add(commandField, BorderLayout.CENTER);
+        inputPanel.add(cursorLabel, BorderLayout.EAST);
         add(inputPanel, BorderLayout.SOUTH);
 
+        setupCursorBlink();
         setupEventHandlers();
         SwingUtilities.invokeLater(this::showWelcome);
     }
@@ -233,6 +250,30 @@ public class PowerShellTerminalPanel extends JPanel {
 
     // ==================== 事件处理 ====================
 
+    private void setupCursorBlink() {
+        cursorBlinkTimer = new javax.swing.Timer(530, e -> {
+            if (!NovelPluginSettings.getInstance().isCursorBlinkEnabled()) {
+                cursorLabel.setVisible(false);
+                return;
+            }
+            if (commandField.isFocusOwner()) {
+                cursorLabel.setVisible(!cursorLabel.isVisible());
+            } else {
+                cursorLabel.setVisible(false);
+            }
+        });
+        cursorBlinkTimer.start();
+
+        commandField.addFocusListener(new FocusAdapter() {
+            @Override public void focusGained(FocusEvent e) {
+                cursorLabel.setVisible(true);
+            }
+            @Override public void focusLost(FocusEvent e) {
+                cursorLabel.setVisible(false);
+            }
+        });
+    }
+
     private void setupEventHandlers() {
         commandField.addActionListener(e -> executeCommand());
         commandField.addKeyListener(new KeyAdapter() {
@@ -244,9 +285,94 @@ public class PowerShellTerminalPanel extends JPanel {
         });
         addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) { commandField.requestFocusInWindow(); }
+            @Override public void mouseEntered(MouseEvent e) { restoreDisguiseMode(); }
+            @Override public void mouseExited(MouseEvent e) { triggerAutoDisguise(); }
         });
         commandField.registerKeyboardAction(e -> clearScreen(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
+    }
+
+    private void triggerAutoDisguise() {
+        NovelPluginSettings settings = NovelPluginSettings.getInstance();
+        if (!settings.isAutoDisguiseEnabled() || novelLines.isEmpty() || isAutoDisguised) return;
+        savedCurrentLine = currentLine;
+        savedNovelName = currentNovelName;
+        isAutoDisguised = true;
+        SwingUtilities.invokeLater(this::renderFakeLogs);
+    }
+
+    private void restoreDisguiseMode() {
+        if (!isAutoDisguised) return;
+        isAutoDisguised = false;
+        currentLine = savedCurrentLine;
+        currentNovelName = savedNovelName;
+        SwingUtilities.invokeLater(this::showNovelPage);
+    }
+
+    private String getEffectiveDisguiseMode() {
+        return NovelPluginSettings.getInstance().getDisguiseMode();
+    }
+
+    // ==================== 自动伪装（纯假日志） ====================
+
+    private static final String[] FAKE_LOG_MESSAGES = {
+            "Initializing Spring context...",
+            "Loading configuration from application.yml",
+            "Connected to database: mysql://localhost:3306/app",
+            "HikariPool-1 - Starting...",
+            "HikariPool-1 - Start completed.",
+            "Mapped URL path [/api/users] onto handler",
+            "Tomcat started on port(s): 8080 (http)",
+            "Started Application in 3.241 seconds",
+            "GET /api/users/123 - 200 OK 45ms",
+            "POST /api/auth/login - 200 OK 120ms",
+            "Cache hit for key: user:123",
+            "Scheduled task 'cleanup' executed in 23ms",
+            "Kafka consumer poll returned 5 records",
+            "Redis PING -> PONG (latency: 2ms)",
+            "File uploaded: report_20240720.pdf (2.4MB)",
+            "Elasticsearch index refreshed: 1247 documents",
+            "JVM heap: 256MB / 512MB (50%)",
+            "GC pause (G1 Young): 18ms",
+            "Thread pool: active=8, queue=0, completed=1423",
+            "WebSocket connection established: session_abc123",
+            "Rate limit check passed for user 123",
+            "Sending email to user@example.com... sent",
+            "Background job 'reportGen' completed successfully",
+            "Circuit breaker 'payment-svc' state: CLOSED",
+            "Feature flag 'new_ui' is enabled",
+            "Audit log: user admin updated config",
+            "Metrics exported to Prometheus endpoint",
+            "Health check: all services UP",
+            "Retry attempt 2/3 for external API call",
+            "Request ID: a1b2c3d4 - processing order #88421",
+    };
+
+    private void renderFakeLogs() {
+        clearScreen();
+        Random rnd = new Random(System.currentTimeMillis());
+        long ts = System.currentTimeMillis() - linesPerPage * 1000L;
+
+        for (int i = 0; i < linesPerPage; i++) {
+            ts += 500 + rnd.nextInt(1500);
+            String time = formatTimestamp(ts);
+            int r = rnd.nextInt(100);
+            String level;
+            Style style;
+            if (r < 70) { level = "INFO "; style = dimStyle; }
+            else if (r < 88) { level = "DEBUG"; style = outputStyle; }
+            else if (r < 97) { level = "WARN "; style = warnStyle; }
+            else { level = "ERROR"; style = errorStyle; }
+            String msg = FAKE_LOG_MESSAGES[rnd.nextInt(FAKE_LOG_MESSAGES.length)];
+            String thread = "http-nio-8080-exec-" + (rnd.nextInt(10) + 1);
+            String cls = "c.a.a.service." + FAKE_LOG_MESSAGES[rnd.nextInt(FAKE_LOG_MESSAGES.length)].split(" ")[0].replace(":", "");
+            String line = "[" + time + "] [" + level + "] [" + thread + "] " + msg;
+            appendLineNoScroll(line, style);
+        }
+
+        appendLineNoScroll("", outputStyle);
+//        appendLineNoScroll(NovelBundle.msg("prompt") + "_", commandStyle);
+        scrollToBottom();
     }
 
     private void refreshLinesPerPage() {
@@ -397,7 +523,12 @@ public class PowerShellTerminalPanel extends JPanel {
             return;
         }
         List<String> lines;
-        try { lines = Files.readAllLines(Paths.get(filePath), StandardCharsets.UTF_8); }
+        try {
+            byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
+            Charset detected = detectEncoding(fileBytes);
+            String content = new String(fileBytes, detected);
+            lines = Arrays.asList(content.split("\r?\n"));
+        }
         catch (IOException e) {
             appendLine("", outputStyle);
             appendLine("  " + NovelBundle.msg("open.read_failed", e.getMessage()), errorStyle);
@@ -413,7 +544,7 @@ public class PowerShellTerminalPanel extends JPanel {
         int savedLine = settings.getReadingProgress(alias);
         currentLine = (savedLine > 0 && savedLine < novelLines.size()) ? savedLine : 0;
 
-        String mode = settings.getDisguiseMode();
+        String mode = getEffectiveDisguiseMode();
         if (NovelPluginSettings.DISGUISE_TAIL.equals(mode)) {
             // tail 模式不清屏，追加内容
             appendLine("", outputStyle);
@@ -430,7 +561,7 @@ public class PowerShellTerminalPanel extends JPanel {
         refreshLinesPerPage();
 
         NovelPluginSettings settings = NovelPluginSettings.getInstance();
-        String mode = settings.getDisguiseMode();
+        String mode = getEffectiveDisguiseMode();
         String nextKey = settings.getNextPageKey();
         String prevKey = settings.getPrevPageKey();
 
@@ -676,7 +807,13 @@ public class PowerShellTerminalPanel extends JPanel {
     }
 
     private int countTotalPages(String filePath) {
-        try { long c = Files.lines(Paths.get(filePath), StandardCharsets.UTF_8).count(); return (int) ((c + linesPerPage - 1) / linesPerPage); }
+        try {
+            byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
+            Charset detected = detectEncoding(fileBytes);
+            String content = new String(fileBytes, detected);
+            long c = content.split("\r?\n").length;
+            return (int) ((c + linesPerPage - 1) / linesPerPage);
+        }
         catch (IOException e) { return 0; }
     }
 
@@ -687,6 +824,32 @@ public class PowerShellTerminalPanel extends JPanel {
                 cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH),
                 cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND),
                 cal.get(Calendar.MILLISECOND));
+    }
+
+    // ==================== 编码自动检测 ====================
+
+    private Charset detectEncoding(byte[] bytes) {
+        if (bytes.length >= 3 && (bytes[0] & 0xFF) == 0xEF && (bytes[1] & 0xFF) == 0xBB && (bytes[2] & 0xFF) == 0xBF) {
+            return StandardCharsets.UTF_8;
+        }
+        if (bytes.length >= 2 && (bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xFE) {
+            return StandardCharsets.UTF_16LE;
+        }
+        if (bytes.length >= 2 && (bytes[0] & 0xFF) == 0xFE && (bytes[1] & 0xFF) == 0xFF) {
+            return StandardCharsets.UTF_16BE;
+        }
+
+        String asUtf8 = new String(bytes, StandardCharsets.UTF_8);
+        byte[] reencoded = asUtf8.getBytes(StandardCharsets.UTF_8);
+        if (java.util.Arrays.equals(bytes, reencoded)) {
+            return StandardCharsets.UTF_8;
+        }
+
+        try {
+            return Charset.forName("GBK");
+        } catch (Exception e) {
+            return Charset.defaultCharset();
+        }
     }
 
     // ==================== 滚动条 ====================

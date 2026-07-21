@@ -22,6 +22,9 @@ public class NovelSettingsPanel {
     private final JBTextField prevPageKeyField;
     private final JBTextField linesPerPageField;
     private final JComboBox<String> disguiseModeCombo;
+    private final JCheckBox cursorBlinkCheck;
+    private final JCheckBox autoDisguiseCheck;
+    private final JComboBox<String> autoDisguiseModeCombo;
 
     private static final String[] DISGUISE_OPTIONS = {
             "无伪装（纯文本）",
@@ -41,6 +44,22 @@ public class NovelSettingsPanel {
             "Tail -f disguise (no clear + command context)"
     };
 
+    private static final String[] AUTO_DISGUISE_OPTIONS = {
+            "日志伪装",
+            "系统输出穿插",
+            "Git Diff 伪装",
+            "进度条伪装",
+            "Tail -f 伪装"
+    };
+
+    private static final String[] AUTO_DISGUISE_OPTIONS_EN = {
+            "Log disguise",
+            "System output interleave",
+            "Git Diff disguise",
+            "Progress bar disguise",
+            "Tail -f disguise"
+    };
+
     public NovelSettingsPanel() {
         novelFileField = new TextFieldWithBrowseButton();
         FileChooserDescriptor descriptor = new FileChooserDescriptor(true, false, false, false, false, false);
@@ -57,7 +76,16 @@ public class NovelSettingsPanel {
         linesPerPageField = new JBTextField(10);
         disguiseModeCombo = new ComboBox<>(isZh() ? DISGUISE_OPTIONS : DISGUISE_OPTIONS_EN);
 
-        String[] options = isZh() ? DISGUISE_OPTIONS : DISGUISE_OPTIONS_EN;
+        cursorBlinkCheck = new JCheckBox(NovelBundle.msg("settings.label.cursor_blink"));
+        cursorBlinkCheck.setSelected(true);
+
+        autoDisguiseCheck = new JCheckBox(NovelBundle.msg("settings.label.auto_disguise"));
+        autoDisguiseCheck.setSelected(false);
+
+        String[] autoOptions = isZh() ? AUTO_DISGUISE_OPTIONS : AUTO_DISGUISE_OPTIONS_EN;
+        autoDisguiseModeCombo = new ComboBox<>(autoOptions);
+        autoDisguiseModeCombo.setEnabled(false);
+        autoDisguiseCheck.addActionListener(e -> autoDisguiseModeCombo.setEnabled(autoDisguiseCheck.isSelected()));
 
         mainPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(NovelBundle.msg("settings.label.file"), novelFileField)
@@ -77,6 +105,17 @@ public class NovelSettingsPanel {
                 .addComponent(new JBLabel(NovelBundle.msg("settings.disguise.desc.3")))
                 .addComponent(new JBLabel(NovelBundle.msg("settings.disguise.desc.4")))
                 .addComponent(new JBLabel(NovelBundle.msg("settings.disguise.desc.5")))
+                .addVerticalGap(12)
+                .addSeparator()
+                .addVerticalGap(8)
+                .addComponent(cursorBlinkCheck)
+                .addComponentToRightColumn(new JBLabel(NovelBundle.msg("settings.hint.cursor_blink")))
+                .addVerticalGap(8)
+                .addComponent(autoDisguiseCheck)
+                .addComponentToRightColumn(new JBLabel(NovelBundle.msg("settings.hint.auto_disguise")))
+                .addVerticalGap(4)
+                .addLabeledComponent(NovelBundle.msg("settings.label.auto_disguise_mode"), autoDisguiseModeCombo)
+                .addComponentToRightColumn(new JBLabel(NovelBundle.msg("settings.hint.auto_disguise_mode")))
                 .addVerticalGap(12)
                 .addSeparator()
                 .addVerticalGap(8)
@@ -122,10 +161,36 @@ public class NovelSettingsPanel {
     public String getDisguiseMode() { return modeToKey(disguiseModeCombo.getSelectedIndex()); }
     public void setDisguiseMode(String modeKey) { disguiseModeCombo.setSelectedIndex(keyToModeIndex(modeKey)); }
 
+    public boolean isCursorBlinkEnabled() { return cursorBlinkCheck.isSelected(); }
+    public void setCursorBlinkEnabled(boolean enabled) { cursorBlinkCheck.setSelected(enabled); }
+
+    public boolean isAutoDisguiseEnabled() { return autoDisguiseCheck.isSelected(); }
+    public void setAutoDisguiseEnabled(boolean enabled) {
+        autoDisguiseCheck.setSelected(enabled);
+        autoDisguiseModeCombo.setEnabled(enabled);
+    }
+
+    public String getAutoDisguiseMode() {
+        int idx = autoDisguiseModeCombo.getSelectedIndex();
+        return (idx >= 0 && idx < AUTO_MODE_KEYS.length) ? AUTO_MODE_KEYS[idx] : NovelPluginSettings.DISGUISE_LOG;
+    }
+    public void setAutoDisguiseMode(String modeKey) {
+        for (int i = 0; i < AUTO_MODE_KEYS.length; i++) {
+            if (AUTO_MODE_KEYS[i].equals(modeKey)) { autoDisguiseModeCombo.setSelectedIndex(i); return; }
+        }
+        autoDisguiseModeCombo.setSelectedIndex(0);
+    }
+
     private static final String[] MODE_KEYS = {
             NovelPluginSettings.DISGUISE_NONE, NovelPluginSettings.DISGUISE_LOG,
             NovelPluginSettings.DISGUISE_SYSTEM_OUTPUT, NovelPluginSettings.DISGUISE_DIFF,
             NovelPluginSettings.DISGUISE_PROGRESS_BAR, NovelPluginSettings.DISGUISE_TAIL
+    };
+
+    private static final String[] AUTO_MODE_KEYS = {
+            NovelPluginSettings.DISGUISE_LOG, NovelPluginSettings.DISGUISE_SYSTEM_OUTPUT,
+            NovelPluginSettings.DISGUISE_DIFF, NovelPluginSettings.DISGUISE_PROGRESS_BAR,
+            NovelPluginSettings.DISGUISE_TAIL
     };
 
     private String modeToKey(int index) {

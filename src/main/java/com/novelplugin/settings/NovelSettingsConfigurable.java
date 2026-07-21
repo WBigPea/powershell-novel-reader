@@ -30,7 +30,10 @@ public class NovelSettingsConfigurable implements Configurable {
                 || !panel.getNextPageKey().equals(s.getNextPageKey())
                 || !panel.getPrevPageKey().equals(s.getPrevPageKey())
                 || panel.getLinesPerPage() != s.getLinesPerPage()
-                || !panel.getDisguiseMode().equals(s.getDisguiseMode());
+                || !panel.getDisguiseMode().equals(s.getDisguiseMode())
+                || panel.isCursorBlinkEnabled() != s.isCursorBlinkEnabled()
+                || panel.isAutoDisguiseEnabled() != s.isAutoDisguiseEnabled()
+                || !panel.getAutoDisguiseMode().equals(s.getAutoDisguiseMode());
     }
 
     @Override
@@ -42,6 +45,9 @@ public class NovelSettingsConfigurable implements Configurable {
         s.setPrevPageKey(panel.getPrevPageKey());
         s.setLinesPerPage(panel.getLinesPerPage());
         s.setDisguiseMode(panel.getDisguiseMode());
+        s.setCursorBlinkEnabled(panel.isCursorBlinkEnabled());
+        s.setAutoDisguiseEnabled(panel.isAutoDisguiseEnabled());
+        s.setAutoDisguiseMode(panel.getAutoDisguiseMode());
     }
 
     @Override
@@ -53,6 +59,9 @@ public class NovelSettingsConfigurable implements Configurable {
         panel.setPrevPageKey(s.getPrevPageKey());
         panel.setLinesPerPage(s.getLinesPerPage());
         panel.setDisguiseMode(s.getDisguiseMode());
+        panel.setCursorBlinkEnabled(s.isCursorBlinkEnabled());
+        panel.setAutoDisguiseEnabled(s.isAutoDisguiseEnabled());
+        panel.setAutoDisguiseMode(s.getAutoDisguiseMode());
     }
 
     @Override
